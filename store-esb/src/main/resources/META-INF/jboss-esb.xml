@@ -1,0 +1,100 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<jbossesb
+	xmlns="http://anonsvn.labs.jboss.com/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.0.1.xsd"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://anonsvn.labs.jboss.com/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.0.1.xsd http://anonsvn.jboss.org/repos/labs/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.0.1.xsd"
+	parameterReloadSecs="5">
+
+	<providers>
+		<fs-provider name="SportStoreFSprovider">
+			<fs-bus busid="sportStoreFileBus">
+
+				<fs-message-filter
+					directory="${basedir}/../order-folder/order-input"
+					post-directory="${basedir}/../order-folder/order-output"
+					error-directory="${basedir}/../order-folder/order-error"
+					input-suffix=".order" work-suffix=".esbWorking" post-delete="false"
+					post-suffix=".sentToEsb" error-delete="false" error-suffix=".IN_ERROR" />
+			</fs-bus>
+		</fs-provider>
+
+		<jms-provider name="JBossMessaging" connection-factory="ConnectionFactory">
+
+			<jms-bus busid="file_esb">
+				<jms-message-filter dest-type="QUEUE"
+					dest-name="queue/fileQueue_esb" />
+			</jms-bus>
+
+		</jms-provider>
+
+
+	</providers>
+
+	<services>
+		<service category="SportStore" name="FileOrderService" description="Receives Orderes">
+			<listeners>
+				<fs-listener name="FileGateway" busidref="sportStoreFileBus"
+					is-gateway="true" poll-frequency-seconds="5">
+					<property name="mimeType" value="text/plain" />
+					<property name="encoding" value="UTF-8" />
+				</fs-listener>
+				<jms-listener name="helloWorldFileAction" busidref="file_esb" />
+			</listeners>
+
+			<actions mep="OneWay">
+				<!-- Built-in Action! -->
+				<action name="printIt" class="org.jboss.soa.esb.actions.SystemPrintln">
+					<property name="printfull" value="false" />
+				</action>
+				
+				<action name="myOwnAction" class="pa165.FileOrderProcessor"
+					process="displayMessage" />
+
+				  <!-- 
+				<action name="transform" class="org.jboss.soa.esb.smooks.SmooksAction">
+					<property name="smooksConfig" value="csv-to-xml-smooks.xml" />
+				</action>
+				 -->
+				<action name="printIt2" class="org.jboss.soa.esb.actions.SystemPrintln">
+					<property name="printfull" value="false" />
+				</action>
+				
+			</actions>
+		</service>
+		
+		<service category="SportStore" name="WSOrderService" description="Receives Orders" invmScope="GLOBAL">
+			<actions mep="OneWay" inXsd="/request.xsd" validate="false">
+				<action name="action1" class="pa165.WsOrderProcessor"
+					process="displayMessage" />
+				<action name="routeToOrders" class="org.jboss.soa.esb.actions.StaticRouter">
+				 	<property name="destinations">
+   	 				   <route-to service-category="SportStore" service-name="OrderService" /> 
+	    		   </property>
+
+				</action>
+			</actions>
+		</service>
+
+	
+
+	<service category="SportStore" name="OrderService" description="Common to all orders" invmScope="GLOBAL">
+		<actions mep="OneWay">
+				<action name="printIt" class="org.jboss.soa.esb.actions.SystemPrintln">
+					<property name="printfull" value="false" />
+				</action>
+				
+       <!-- 					
+			<action name="notificationAction" class="org.jboss.soa.esb.actions.Notifier">
+				<property name="okMethod" value="notifyOK" />
+				<property name="notification-details">
+					<NotificationList type="ok">
+						<target class="NotifyConsole" />
+					</NotificationList>
+				</property>
+			</action>
+			 -->
+		</actions>
+	</service>
+	</services>
+
+</jbossesb>

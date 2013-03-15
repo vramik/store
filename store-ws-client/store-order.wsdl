@@ -1,0 +1,31 @@
+
+<wsdl:definitions targetNamespace='http://soa.jboss.org/Store' xmlns:esbns1='http://www.store.cz/orders' xmlns:soap='http://schemas.xmlsoap.org/wsdl/soap/' 
+                  xmlns:tns='http://soa.jboss.org/Store' xmlns:wsdl='http://schemas.xmlsoap.org/wsdl/'>
+ <wsdl:types>
+  <xs:schema targetNamespace='http://www.store.cz/orders' version='1.0' xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+   <xs:include schemaLocation='request.xsd'/>
+  </xs:schema>
+ </wsdl:types>
+ <wsdl:message name='WSOrderServiceReq'>
+  <wsdl:part element='esbns1:order' name='in'></wsdl:part>
+ </wsdl:message>
+ <wsdl:portType name='WSOrderServicePortType'>
+  <wsdl:operation name='WSOrderServiceOp'>
+   <wsdl:input message='tns:WSOrderServiceReq' name='WSOrderServiceReq'></wsdl:input>
+  </wsdl:operation>
+ </wsdl:portType>
+ <wsdl:binding name='WSOrderServiceBinding' type='tns:WSOrderServicePortType'>
+  <soap:binding style='document' transport='http://schemas.xmlsoap.org/soap/http'/>
+  <wsdl:operation name='WSOrderServiceOp'>
+   <soap:operation soapAction='http://soa.jboss.org/Store/WSOrderServiceOp'/>
+   <wsdl:input name='WSOrderServiceReq'>
+    <soap:body use='literal'/>
+   </wsdl:input>
+  </wsdl:operation>
+ </wsdl:binding>
+ <wsdl:service name='WSOrderServiceService'>
+  <wsdl:port binding='tns:WSOrderServiceBinding' name='WSOrderServicePortType'>
+   <soap:address location='http://127.0.0.1:8080/store-esb-1.0-SNAPSHOT/ebws/Store/WSOrderService'/>
+  </wsdl:port>
+ </wsdl:service>
+</wsdl:definitions>

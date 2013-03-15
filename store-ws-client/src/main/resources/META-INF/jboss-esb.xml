@@ -1,0 +1,84 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<jbossesb xmlns="http://anonsvn.labs.jboss.com/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.0.1.xsd"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://anonsvn.labs.jboss.com/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.0.1.xsd http://anonsvn.jboss.org/repos/labs/labs/jbossesb/trunk/product/etc/schemas/xml/jbossesb-1.0.1.xsd"
+    parameterReloadSecs="5">
+
+    <providers>
+         <fs-provider name="FSprovider1">
+          	<fs-bus busid="helloFileChannel" >
+          	
+          	<!-- TODO input dir -->
+          	
+          		<fs-message-filter
+          			directory="/home/fnguyen/work/temp/pa165/SportStore/order-input"
+          			post-directory="/home/fnguyen/work/temp/pa165/SportStore/order-output"
+          			error-directory="/home/fnguyen/work/temp/pa165/SportStore/order-error"
+          			input-suffix=".order"
+          			work-suffix=".esbWorking"
+          			post-delete="false"
+          			post-suffix=".sentToEsb"
+          			error-delete="false"
+          			error-suffix=".IN_ERROR"
+          		/>
+          	</fs-bus>
+          </fs-provider>
+          
+          <jms-provider name="JBossMessaging" 
+          		connection-factory="ConnectionFactory"
+            	 >
+            
+			    <jms-bus busid="quickstartEsbChannel">
+			        <jms-message-filter
+			            dest-type="QUEUE"
+			            dest-name="queue/fileQueue_esb"
+
+			        /><!-- 			            selector="type='fromHelloworldFileAction'" -->
+			    </jms-bus>
+			
+		   </jms-provider>
+
+
+      </providers>
+      
+      <services>
+        <service 
+        	category="SportStore" 
+        	name="WSOrderService" 
+        	description="Receives Orders" invmScope="GLOBAL">
+            <actions mep="RequestResponse" inXsd="/request.xsd" validate="false">
+	           <action name="dump" class="org.jboss.soa.esb.actions.SystemPrintln">
+		        <property name="printfull" value="true"/>
+		   		</action>
+            </actions>
+        </service>
+      
+        <service 
+        	category="SportStore" 
+        	name="FileOrderService" 
+        	description="Receives Orderes">
+            <listeners>
+				<fs-listener name="FileGateway" busidref="helloFileChannel" is-gateway="true" poll-frequency-seconds="10">
+            		<property name="mimeType" value="text/plain" />
+            		<property name="encoding" value="UTF-8" />
+            	</fs-listener>
+                <jms-listener name="helloWorldFileAction"
+                              busidref="quickstartEsbChannel"
+                />
+
+            </listeners>
+            <actions mep="OneWay">
+                   <action name="action1" 
+                   	class="pa165.FileOrderProcessor" 
+                   	process="displayMessage" 
+                   	/>      
+                   	
+                   	<!-- Built-in Action! -->
+                    <action name="action2" class="org.jboss.soa.esb.actions.SystemPrintln">
+                      <property name="printfull" value="false"/>
+                    </action>
+            </actions>
+        </service>
+      </services>
+     
+</jbossesb>
